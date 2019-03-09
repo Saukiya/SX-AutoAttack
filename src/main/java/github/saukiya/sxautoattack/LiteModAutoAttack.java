@@ -37,7 +37,7 @@ public class LiteModAutoAttack implements Tickable, Configurable{
 
     @Override
     public String getVersion() {
-        return "0.3.1";
+        return "0.3.2";
     }
 
     @Override
@@ -201,7 +201,7 @@ public class LiteModAutoAttack implements Tickable, Configurable{
         this.targetRange = targetRange;
     }
 
-    public String getBlackTarget() {
+    public String getTargetList() {
         return blackTarget;
     }
 

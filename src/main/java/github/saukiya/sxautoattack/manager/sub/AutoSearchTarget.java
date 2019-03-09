@@ -19,6 +19,12 @@ public class AutoSearchTarget implements Manager {
 
     private Entity target = null;
 
+    private List<String> targetList;
+
+    public AutoSearchTarget() {
+        targetList = Arrays.asList(mod.getTargetList().split("[|]"));
+    }
+
     @Override
     public int priority() {
         return 2;
@@ -42,15 +48,15 @@ public class AutoSearchTarget implements Manager {
     @Override
     public void addOptions(ConfigPanel config) {
         config.addLabel(145,0,55,15, 0x00FFFF, I18n.format("settings.targetRange"));
-        config.addLabel(0,40,200,15, 0x00FFFF, I18n.format("settings.blackTarget"));
+        config.addLabel(0,40,200,15, 0x00FFFF, I18n.format("settings.targetList"));
 
         config.addTextField("TargetRange", 145, 15, 55, 20)
                 .setRegex("^[0-9.]*$", false)
                 .setMaxLength(5)
                 .setText(String.valueOf(mod.getTargetRange()));
 
-        config.addTextField("BlackTarget", 0, 55, 200, 20)
-                .setText(mod.getBlackTarget());
+        config.addTextField("TargetList", 0, 55, 200, 20)
+                .setText(mod.getTargetList());
 
     }
 
@@ -59,7 +65,8 @@ public class AutoSearchTarget implements Manager {
         if (config.getTextField("TargetRange").getText().length() > 0)
             mod.setTargetRange(Double.valueOf(config.getTextField("TargetRange").getText()));
 
-        mod.setBlackTarget(config.getTextField("BlackTarget").getText());
+        mod.setBlackTarget(config.getTextField("TargetList").getText());
+        targetList = Arrays.asList(mod.getTargetList().split("[|]"));
     }
 
     public void lockPerspective(EntityPlayerSP player, Entity target) {
@@ -79,15 +86,18 @@ public class AutoSearchTarget implements Manager {
 
     public Entity searchTarget(EntityPlayerSP player, World world, Class zlass) {
         Map<Double, Entity> entityMap = new TreeMap<>();
-
+        List<String> list = new ArrayList<>();
         for (Entity entity : world.getLoadedEntityList()) {
             double distance = getDistance(player, entity);
-
-            if (mod.getBlackTarget().length() == 0) {
-                Manager.sendMessage(player, entity.getClass().getSimpleName());
+            if (entity.getUniqueID().equals(player.getUniqueID())) {
+                continue;
             }
 
-            if (entity.getUniqueID().equals(player.getUniqueID()) || !mod.getBlackTarget().equals(entity.getClass().getSimpleName())) {
+            if (mod.getTargetList().length() == 0) {
+                if (!list.contains(entity.getClass().getSimpleName())) {
+                    list.add(entity.getClass().getSimpleName());
+                }
+            } else if (!targetList.contains(entity.getClass().getSimpleName())) {
                 continue;
             }
 
@@ -96,7 +106,9 @@ public class AutoSearchTarget implements Manager {
                 entityMap.put(distance, entity);
             }
         }
-
+        if (list.size() != 0) {
+            Manager.sendMessage(player, list.toString());
+        }
         return entityMap.size() > 0 ? new ArrayList<>(entityMap.values()).get(0) : null;
     }
 

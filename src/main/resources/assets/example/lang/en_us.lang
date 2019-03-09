@@ -7,7 +7,7 @@ settings.attackDistance=攻击距离
 settings.escapeAfkTick=逃避暂离间隔
 
 settings.targetRange=搜寻目标范围
-settings.blackTarget=排除目标列表
+settings.targetList=锁定目标列表
 
 messages.autoAttackToggle=§8[§cSX-AutoAttack§8] §7AutoAttack: {0}
 messages.searchTarget=§8[§cSX-AutoAttack§8] §7Search §c{0}§7 {1} Targets §8[§7{2}§c,§7{3}§c,§7{4}§8]
