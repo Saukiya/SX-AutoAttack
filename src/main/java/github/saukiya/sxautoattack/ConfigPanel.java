@@ -33,7 +33,7 @@ public class ConfigPanel extends AbstractConfigPanel {
     public ConfigTextField addTextField(String key, int x, int y, int width, int height) {
         ConfigTextField configTextField = super.addTextField(id++, x, y, width, height);
         map.put(key, configTextField);
-        return super.addTextField(id, x, y, width, height);
+        return configTextField;
     }
 
     public ConfigTextField getTextField(String key) {

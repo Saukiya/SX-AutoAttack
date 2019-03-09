@@ -37,7 +37,7 @@ public class LiteModAutoAttack implements Tickable, Configurable{
 
     @Override
     public String getVersion() {
-        return "0.2.0";
+        return "0.3.1";
     }
 
     @Override
@@ -69,6 +69,13 @@ public class LiteModAutoAttack implements Tickable, Configurable{
     @SerializedName("attack_distance")
     private double attackDistance = 4;
 
+    @Expose
+    @SerializedName("target_range")
+    private double targetRange = 8;
+
+    @Expose
+    @SerializedName("black_target")
+    private String blackTarget = "Player";
 
     @Expose
     @SerializedName("escape_afk_tick")
@@ -86,21 +93,12 @@ public class LiteModAutoAttack implements Tickable, Configurable{
     @SerializedName("afk_z")
     private double afkZ = 0.05;
 
-    @Expose
-    @SerializedName("update_target_tick")
-    private int updateTargetTick = 200;
-
-    @Expose
-    @SerializedName("target_range")
-    private double targetRange = 8;
-
 
     private boolean enable = false;
 
 
     @Override
     public void onTick(Minecraft minecraft, float partialTicks, boolean inGame, boolean clock) {
-        EntityPlayerSP player = minecraft.player;
         // 在游戏时被按下切换自动攻击功能
         if (inGame && clockKeyBinding.isPressed()) {
             enable = !enable;
@@ -117,7 +115,7 @@ public class LiteModAutoAttack implements Tickable, Configurable{
                 }
                 //
             }
-            Manager.sendMessage(player, MessageFormat.format(I18n.format("messages.autoAttackToggle"), enable));
+            Manager.sendMessage(minecraft.player, MessageFormat.format(I18n.format("messages.autoAttackToggle"), enable));
         }
         // 不在游戏时关闭自动攻击
         if (!inGame && enable) {
@@ -128,6 +126,7 @@ public class LiteModAutoAttack implements Tickable, Configurable{
         }
 
         if (enable) {
+            EntityPlayerSP player = minecraft.player;
             if (!inGame) {
                 enable = false;
                 for (Manager manager : Manager.getList()) {
@@ -202,11 +201,11 @@ public class LiteModAutoAttack implements Tickable, Configurable{
         this.targetRange = targetRange;
     }
 
-    public int getUpdateTargetTick() {
-        return updateTargetTick;
+    public String getBlackTarget() {
+        return blackTarget;
     }
 
-    public void setUpdateTargetTick(int updateTargetTick) {
-        this.updateTargetTick = updateTargetTick;
+    public void setBlackTarget(String blackTarget) {
+        this.blackTarget = blackTarget;
     }
 }

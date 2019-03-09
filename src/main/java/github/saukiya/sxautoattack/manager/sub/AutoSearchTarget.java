@@ -6,25 +6,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.world.World;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @Author 格洛
  * @Since 2019/3/7 16:04
  */
 public class AutoSearchTarget implements Manager {
-
-    private int tick = 1;
-
-    private Map<Class<? extends Entity>, List<Entity>> targetMap = new HashMap<>();
 
     private Entity target = null;
 
@@ -35,108 +26,81 @@ public class AutoSearchTarget implements Manager {
 
     @Override
     public void process(Minecraft minecraft, EntityPlayerSP player, boolean clock) {
-
-        if (clock && mod.getTargetRange() > 0 && mod.getUpdateTargetTick() > 0) {
+        if (mod.getTargetRange() > 0) {
             World world = player.getEntityWorld();
-            // 搜索目标
-            if (tick++ >= mod.getUpdateTargetTick()) {
-                tick = 1;
-                if (searchTarget(player, world, EntityLiving.class).size() == 0) {
-                    Manager.sendMessage(player, MessageFormat.format(I18n.format("messages.noSearchTarget"), EntityLiving.class.getSimpleName(), df.format(player.posX), df.format(player.posY), df.format(player.posZ)));
-                    if (searchTarget(player, world, EntityItem.class).size() == 0) {
-                        Manager.sendMessage(player, MessageFormat.format(I18n.format("messages.noSearchTarget"), EntityItem.class.getSimpleName(), df.format(player.posX), df.format(player.posY), df.format(player.posZ)));
-                    }
-                }
-            } else {
-                if (targetMap.getOrDefault(EntityLiving.class, new ArrayList<>()).size() == 0) {
-                    tick = 1;
-                    searchTarget(player, world, EntityLiving.class);
-                } else if (targetMap.getOrDefault(EntityItem.class, new ArrayList<>()).size() == 0) {
-                    searchTarget(player, world, EntityItem.class);
-                }
-            }
-
             // TODO 处理
-            List<Entity> entityList = targetMap.get(EntityLiving.class);
-            List<Entity> dropsList = targetMap.get(EntityItem.class);
-            if (entityList.size() > 0) {
-                EntityLiving entityLiving = null;
-                for (Entity entity : entityList) {
-                    entity.setGlowing(true);
-                }
-                for (int i = entityList.size() - 1; i >= 0; i--) {
-                    entityLiving = (EntityLiving) entityList.get(i);
-                    if (!entityLiving.isDead && isRange(player, entityLiving)) {
-                        break;
-                    }
-                    entityLiving = null;
-                    entityList.remove(i);
-                }
-                if (entityLiving != null) {
-                    entityLiving.setGlowing(true);
-                }
-            } else if (dropsList.size() > 0){
-                EntityItem entityItem = (EntityItem) dropsList.get(0);
-                entityItem.setGlowing(true);
+            if (target != null && !target.isDead) target.setGlowing(false);
+            EntityLivingBase entity = (EntityLivingBase) searchTarget(player, world, EntityLivingBase.class);
+            if (entity != null && entity.getHealth() > 0) {
+                target = entity;
+                entity.setGlowing(true);
+                lockPerspective(player, target);
             }
         }
     }
 
     @Override
     public void addOptions(ConfigPanel config) {
-        config.addLabel(0,120,90,15, 0x00FFFF, I18n.format("settings.updateTargetTick"));
-        config.addLabel(110,120,90,15, 0x00FFFF, I18n.format("settings.targetRange"));
+        config.addLabel(145,0,55,15, 0x00FFFF, I18n.format("settings.targetRange"));
+        config.addLabel(0,40,200,15, 0x00FFFF, I18n.format("settings.blackTarget"));
 
-        config.addTextField("UpdateTargetTick", 0, 135, 90, 20)
-                .setRegex("^[0-9]*$", false)
-                .setMaxLength(5)
-                .setText(String.valueOf(mod.getUpdateTargetTick()));
-        config.addTextField("TargetRange", 110, 135, 90, 20)
+        config.addTextField("TargetRange", 145, 15, 55, 20)
                 .setRegex("^[0-9.]*$", false)
                 .setMaxLength(5)
                 .setText(String.valueOf(mod.getTargetRange()));
+
+        config.addTextField("BlackTarget", 0, 55, 200, 20)
+                .setText(mod.getBlackTarget());
 
     }
 
     @Override
     public void onPanelHidden(ConfigPanel config) {
-        if (config.getTextField("UpdateTargetTick").getText().length() > 0)
-            mod.setUpdateTargetTick(Integer.valueOf(config.getTextField("UpdateTargetTick").getText()));
         if (config.getTextField("TargetRange").getText().length() > 0)
             mod.setTargetRange(Double.valueOf(config.getTextField("TargetRange").getText()));
+
+        mod.setBlackTarget(config.getTextField("BlackTarget").getText());
     }
 
-    @Override
-    public void onEnable() {
-        tick = mod.getUpdateTargetTick();
+    public void lockPerspective(EntityPlayerSP player, Entity target) {
+        double x = target.posX - player.posX;
+        double y = (target.posY + target.getEyeHeight()) - (player.posY + player.getEyeHeight());
+        double z = target.posZ - player.posZ;
+        double hypotenuse = Math.sqrt(Math.pow(x,2) + Math.pow(z,2));
+
+        player.rotationYaw = (float) (-180 * Math.atan2(x,z) / Math.PI);
+        player.rotationPitch = (float) (-180 * Math.atan2(y, hypotenuse) / Math.PI);
     }
 
     @Override
     public void onDisable() {
-        for (Entity entity : targetMap.getOrDefault(EntityLiving .class, new ArrayList<>())) {
-            entity.setGlowing(false);
-        }
-        targetMap.clear();
+        if (target != null && !target.isDead) target.setGlowing(false);
     }
 
-    public List<Entity> searchTarget(EntityPlayerSP player, World world, Class zlass) {
-        List<Entity> entityList = targetMap.computeIfAbsent(zlass, k -> new ArrayList<>());
-        entityList.clear();
+    public Entity searchTarget(EntityPlayerSP player, World world, Class zlass) {
+        Map<Double, Entity> entityMap = new TreeMap<>();
 
         for (Entity entity : world.getLoadedEntityList()) {
-            // 判断是否为"活"的实体 并且在搜寻范围内 (死实体例如箭 - 掉落物
-            if (zlass.isInstance(entity) && isRange(player, entity)) {
+            double distance = getDistance(player, entity);
+
+            if (mod.getBlackTarget().length() == 0) {
+                Manager.sendMessage(player, entity.getClass().getSimpleName());
+            }
+
+            if (entity.getUniqueID().equals(player.getUniqueID()) || !mod.getBlackTarget().equals(entity.getClass().getSimpleName())) {
+                continue;
+            }
+
+            if (zlass.isInstance(entity) && getDistance(player, entity) <= mod.getTargetRange()) {
                 // 增加到临时储存区
-                entityList.add(entity);
+                entityMap.put(distance, entity);
             }
         }
-        if (entityList.size() > 0) {
-            Manager.sendMessage(player, MessageFormat.format(I18n.format("messages.searchTarget"), entityList.size(), zlass.getSimpleName(), df.format(player.posX), df.format(player.posY), df.format(player.posZ)));
-        }
-        return entityList;
+
+        return entityMap.size() > 0 ? new ArrayList<>(entityMap.values()).get(0) : null;
     }
 
-    public boolean isRange(Entity entity1, Entity entity2) {
-        return Math.abs(entity1.posX - entity2.posX) <= mod.getTargetRange() && Math.abs(entity1.posY - entity2.posY) <= mod.getTargetRange() && Math.abs(entity1.posZ - entity2.posZ) <= mod.getTargetRange();
+    public double getDistance(Entity entity1, Entity entity2) {
+        return Math.sqrt(Math.pow(Math.sqrt(Math.pow(entity1.posX - entity2.posX,2) + Math.pow(entity1.posZ - entity2.posZ, 2)), 2) + Math.pow(entity1.posY - entity2.posY, 2));
     }
 }

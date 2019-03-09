@@ -27,7 +27,7 @@ public class EscapeAfk implements Manager {
     @Override
     public void process(Minecraft minecraft, EntityPlayerSP player, boolean clock) {
         if (clock) {
-            if (mod.getEscapeAfkTick() > 0 && tick1++ >= mod.getEscapeAfkTick() && !afkMove) {
+            if (!afkMove && mod.getEscapeAfkTick() > 0 && tick1++ >= mod.getEscapeAfkTick()) {
                 tick1 = 1;
                 afkMove = true;
             }
@@ -49,24 +49,24 @@ public class EscapeAfk implements Manager {
 
     @Override
     public void addOptions(ConfigPanel config) {
-        config.addLabel(0,40,200,15, 0x00FFFF, I18n.format("settings.escapeAfkTick"));
-        config.addLabel(0,80,60,15, 0x00FFFF, "Afk-ForSize");
-        config.addLabel(80,80,40,15, 0x00FFFF, "Afk-X");
-        config.addLabel(140,80,60,15, 0x00FFFF, "Afk-Z");
+        config.addLabel(0,80,50,15, 0x00FFFF, I18n.format("settings.escapeAfkTick"));
+        config.addLabel(70,80,30,15, 0x00FFFF, "Afk-ForSize");
+        config.addLabel(120,80,30,15, 0x00FFFF, "Afk-X");
+        config.addLabel(170,80,30,15, 0x00FFFF, "Afk-Z");
 
-        config.addTextField("EscapeAfkTick", 0, 55, 200, 20)
+        config.addTextField("EscapeAfkTick", 0, 95, 50, 20)
                 .setRegex("^[0-9]*$", false)
                 .setMaxLength(5)
                 .setText(String.valueOf(mod.getEscapeAfkTick()));
-        config.addTextField("AfkForSize", 0, 95, 60, 20)
+        config.addTextField("AfkForSize", 70, 95, 30, 20)
                 .setRegex("^[0-9]*$", false)
                 .setMaxLength(5)
                 .setText(String.valueOf(mod.getAfkForSize()));
-        config.addTextField("AfkX", 80, 95, 40, 20)
+        config.addTextField("AfkX", 120, 95, 30, 20)
                 .setRegex("^[0-9.]*$", false)
                 .setMaxLength(5)
                 .setText(String.valueOf(mod.getAfkX()));
-        config.addTextField("AfkZ", 140, 95, 60, 20)
+        config.addTextField("AfkZ", 170, 95, 30, 20)
                 .setRegex("^[0-9.]*$", false)
                 .setMaxLength(5)
                 .setText(String.valueOf(mod.getAfkZ()));
@@ -77,8 +77,8 @@ public class EscapeAfk implements Manager {
     public void onPanelHidden(ConfigPanel config) {
         if (config.getTextField("EscapeAfkTick").getText().length() > 0)
             mod.setEscapeAfkTick(Integer.valueOf(config.getTextField("EscapeAfkTick").getText()));
-        if (config.getTextField("AfkSize").getText().length() > 0)
-            mod.setAfkForSize(Integer.valueOf(config.getTextField("AfkSize").getText()));
+        if (config.getTextField("AfkForSize").getText().length() > 0)
+            mod.setAfkForSize(Integer.valueOf(config.getTextField("AfkForSize").getText()));
         if (config.getTextField("AfkX").getText().length() > 0)
             mod.setAfkX(Double.valueOf(config.getTextField("AfkX").getText()) % 1);
         if (config.getTextField("AfkZ").getText().length() > 0)

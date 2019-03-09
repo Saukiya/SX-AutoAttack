@@ -35,7 +35,7 @@ public class AutoAttack implements Manager {
                 // 非玩家
                 if (!(entity instanceof EntityPlayer)) {
                     double distance = Math.sqrt(Math.pow(Math.abs(player.posX - entity.posX),2) + Math.pow(Math.abs(player.posZ - entity.posZ), 2));// 勾股定理计算距离
-                    // 距离小于1（方便捡东西
+                    // 在设定攻击距离内（方便捡东西
                     if (distance < mod.getAttackDistance()) {
                         // 挥动手臂
                         player.swingArm(EnumHand.MAIN_HAND);
@@ -50,15 +50,15 @@ public class AutoAttack implements Manager {
 
     @Override
     public void addOptions(ConfigPanel config) {
-        config.addLabel(0,0,90,15, 0x00FFFF, I18n.format("settings.attackTick"));
-        config.addLabel(110,0,90,15, 0x00FFFF, I18n.format("settings.attackDistance"));
+        config.addLabel(0,0,55,15, 0x00FFFF, I18n.format("settings.attackTick"));
+        config.addLabel(75,0,50,15, 0x00FFFF, I18n.format("settings.attackDistance"));
 
-        config.addTextField("AttackTick", 0, 15, 90, 20)
+        config.addTextField("AttackTick", 0, 15, 55, 20)
                 .setRegex("^[0-9]*$", false)
                 .setMaxLength(5)
                 .setText(String.valueOf(mod.getAttackTick()));
 
-        config.addTextField("AttackDistance", 110, 15, 90, 20)
+        config.addTextField("AttackDistance", 75, 15, 50, 20)
                 .setRegex("^[0-9.]*$", false)
                 .setMaxLength(5)
                 .setText(String.valueOf(mod.getAttackDistance()));
@@ -67,10 +67,11 @@ public class AutoAttack implements Manager {
 
     @Override
     public void onPanelHidden(ConfigPanel config) {
-        if (config.getTextField("AttackTick").getText().length() > 0)
-            mod.setAttackTick(Integer.valueOf(config.getTextField("attackTick").getText()));
+        if (config.getTextField("AttackTick").getText().length() > 0) {
+            mod.setAttackTick(Integer.valueOf(config.getTextField("AttackTick").getText()));
+        }
         if (config.getTextField("AttackDistance").getText().length() > 0)
-            mod.setAttackDistance(Double.valueOf(config.getTextField("attackDistance").getText()));
+            mod.setAttackDistance(Double.valueOf(config.getTextField("AttackDistance").getText()));
     }
 
     @Override
